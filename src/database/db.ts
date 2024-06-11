@@ -3,7 +3,9 @@ import mongoose from "mongoose";
 const MONGO_URI: string = "mongodb://localhost:27017/user_services";
 const connectDB = async () => {
   try {
-    await mongoose.connect(MONGO_URI, {});
+    await mongoose.connect(MONGO_URI, {
+      directConnection: true,
+    });
     console.log("MongoDB connection SUCCESS");
   } catch (error) {
     console.error("MongoDB connection FAIL");
