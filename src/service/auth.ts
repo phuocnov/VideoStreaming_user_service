@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User, { IUser } from "../models/user";
@@ -19,8 +18,6 @@ export const signup = async (
   if (existedUser) {
     throw new Error("Email already exists");
   }
-
-  console.log("Zooooo");
   const hashedPassword = await bcrypt.hash(password, 10);
   const user = await User.create({
     username,
