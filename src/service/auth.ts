@@ -51,3 +51,23 @@ export const signin = async (
 
   return { user, token: jwt.sign({ id: user._id }, JWT_SECRET) };
 };
+
+export const validateToken = async (token: string): Promise<IUser> => {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      // Throw a specific error for user not found to differentiate it from token validation errors
+      throw new Error("User not found");
+    }
+    return user;
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      throw new Error("Invalid token");
+    } else if (error instanceof Error && error.message === "User not found") {
+      throw error;
+    } else {
+      throw new Error("Authentication failed");
+    }
+  }
+};

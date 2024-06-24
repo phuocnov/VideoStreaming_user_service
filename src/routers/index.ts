@@ -1,5 +1,5 @@
 import express from "express";
-import { signin, signup } from "../service/auth";
+import { signin, signup, validateToken } from "../service/auth";
 
 const router = express.Router();
 /**
@@ -127,8 +127,82 @@ router.post("/signin", async (req, res) => {
   }
 });
 
-router.get("/test", (req, res) => {
-  res.send("Hello from router");
+/**
+ * @openapi
+ * /auth/validate-token:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     description: Validates the user's authentication token and returns user information if valid.
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: The authentication token to be validated.
+ *     parameters:
+ *       - in: header
+ *         name: authorization
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Authentication token prefixed with 'Bearer '.
+ *     responses:
+ *       200:
+ *         description: Token is valid. Returns user information.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   description: The user's unique identifier.
+ *                 username:
+ *                   type: string
+ *                   description: The user's username.
+ *                 email:
+ *                   type: string
+ *                   description: The user's email address.
+ *       400:
+ *         description: Bad request. Possible reasons include missing token or invalid token format.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message explaining the reason for the failure.
+ *       401:
+ *         description: Unauthorized. The token is invalid or expired.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message indicating the token is invalid or expired.
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post("/validate-token", async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      throw new Error("Token is required");
+    }
+    const user = await validateToken(token);
+    res.status(200).json(user);
+  } catch (error) {
+    if (error instanceof Error)
+      res.status(400).json({ message: error.message });
+  }
 });
 
 export default router;

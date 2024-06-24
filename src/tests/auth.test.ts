@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { signup, signin } from "../service/auth";
+import { signup, signin, validateToken } from "../service/auth";
 import User from "../models/user";
 
 jest.mock("bcryptjs");
@@ -93,6 +93,29 @@ describe("Auth service", () => {
       await expect(signin("mockEmail", "mockPassword")).rejects.toThrow(
         "Password is incorrect"
       );
+    });
+  });
+
+  describe("validateToken", () => {
+    it("should return a user if the token is valid", async () => {
+      const mockUser = {
+        _id: "mockId",
+        username: "mockUsername",
+        email: "mockEmail",
+      };
+
+      (jwt.verify as jest.Mock).mockReturnValueOnce({ id: "mockId" });
+      (User.findById as jest.Mock).mockResolvedValueOnce(mockUser);
+
+      await expect(validateToken("mockToken")).resolves.toEqual(mockUser);
+    });
+
+    it("should throw an error if the token is invalid", async () => {
+      (jwt.verify as jest.Mock).mockImplementation(() => {
+        throw new Error("Invalid token");
+      });
+
+      await expect(validateToken("mockToken")).rejects.toThrow("Invalid token");
     });
   });
 });
